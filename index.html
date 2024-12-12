@@ -154,16 +154,19 @@
             return this.getAttribute("model");
         }
         attributeChangedCallback(name, oldValue, newValue) {
-            const value = newValue || oldValue;
             const {
                 articlesNode
             } = this.state;
-            if (name === "model") {
-                if (value) {
-                    Array.from(this.childNodes).map(e => this.removeChild(e));
-                    const cloneNode = articlesNode.cloneNode(true);
-                    cloneNode.render(this.models[value]);
-                    this.appendChild(cloneNode);
+            const value = newValue || oldValue;
+            if (value) {
+                if (name === "model") {
+                    const model = this.models[value];
+                    if (model) {
+                        Array.from(this.childNodes).map(e => this.removeChild(e));
+                        const cloneNode = articlesNode.cloneNode(true);
+                        cloneNode.render(model);
+                        this.appendChild(cloneNode);
+                    }
                 }
             }
         }
