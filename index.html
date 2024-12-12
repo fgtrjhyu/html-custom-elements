@@ -2,21 +2,18 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Custom elements with slot</title>
+    <title>Using custom elements with slot</title>
   </head>
   <body>
-    <h3>Custom elements with slot</h3>
+    <h4>Using custom elements with slot</h4>
     <div>
       <label>
         select model:
-        <select id="variableSelector">
-          <option value="operatingSystems">Operating Systems</option>
-          <option value="programmingLanguages">Programming Languages</option>
-        </select>
+        <select id="variableSelector"></select>
       </label>
     </div>
     <div>
-      <fgtrjhyu-articles using="programmingLanguages" id="articles">
+      <fgtrjhyu-articles model="programmingLanguages" id="articles">
         <fgtrjhyu-articles-articles>
           <template>
             <h2><slot name="header.title"></slot> Articles</h2>
@@ -58,80 +55,6 @@
   </body>
 </html>
 <script>
-const articles = document.getElementById('articles');
-const variableSelector = document.getElementById('variableSelector');
-Array.from(variableSelector.options).reduce
-  ( function(using, option)
-    { option.selected = option.value === using
-    ; return using
-    }
-  , articles.getAttribute("using")
-  )
-variableSelector.addEventListener
-  ( "change"
-  , function(evt)
-    { articles.using = evt.srcElement.value
-    }
-  )
-function propValueOf(value, path)
-{ while (path.length > 0)
-  { [ head, ...path ] = path
-  ; value = value[head]
-  }
-  return value;
-}
-const operatingSystems =
-  { title: "Operating Systems"
-  , articles:
-    [ { author: "Puffy"
-    , title: "Absolute OpenBSD"
-    , locale: {
-        country: "The Deep Sea"
-      }
-      }
-    , { author: "Glenda"
-      , title: "8 1/2"
-      , locale: {
-          country: "Outer Space"
-        }
-      }
-    , { author: "Beastle"
-      , title: "The FreeBSD Handbook"
-      , locale: {
-          country: "US"
-        }
-      }
-    ]
-  }
-const programmingLanguages =
-  { title: "Programming Languages"
-  , articles:
-    [ { author: "Duke"
-      , title: "The Book of Java"
-      , locale: {
-          country: "US"
-        }
-      }
-    , { author: "Ferris"
-      , title: "The Book of Rust"
-      , locale: {
-          country: "CA"
-        }
-      }
-    , { author: "Gopher"
-      , title: "The Book of Golang"
-      , locale: {
-          country: "CH"
-        }
-      }
-    , { author: "The Lisp allien"
-      , title: "Li.p..li..s.pi...sp.ips.li.pp..."
-      , locale: {
-          country: "Space"
-        }
-      }
-    ]
-  }
 customElements.define
   ( "fgtrjhyu-articles-article"
   , class extends HTMLElement
@@ -139,7 +62,14 @@ customElements.define
       { super()
       }
     ; render(model)
-      { const [ template, ...elements ] = Array
+      { function propValueOf(value, path)
+        { while (path.length > 0)
+          { var [ head, ...path ] = path
+          ; value = value[head]
+          }
+          return value;
+        }
+      ; const [ template, ...elements ] = Array
           .from(this.childNodes)
           .map(e => this.removeChild(e))
           .filter(e => e.nodeType === 1)
@@ -172,7 +102,14 @@ customElements.define
       { super()
       }
     ; render(model)
-      { const [ template, articleNode, ...elements ] = Array
+      { function propValueOf(value, path)
+        { while (path.length > 0)
+          { var [ head, ...path ] = path
+          ; value = value[head]
+          }
+          return value;
+        }
+      ; const [ template, articleNode, ...elements ] = Array
           .from(this.childNodes)
           .map(e => this.removeChild(e))
           .filter(e => e.nodeType === 1)
@@ -206,13 +143,7 @@ customElements.define
 customElements.define
   ( "fgtrjhyu-articles"
   , class extends HTMLElement
-    { static observedAttributes = [ "using" ]
-    ; set using(newUsing)
-      { this.setAttribute("using", newUsing)
-      }
-    ; get using()
-      { return this.getAttribute("using")
-      }
+    { static observedAttributes = [ "model" ]
     ; constructor()
       { super()
       ; const [ articlesNode ] = Array
@@ -222,16 +153,101 @@ customElements.define
           .map(e => e.nodeName === "TEMPLATE" ? e.content : e)
       ; this.state = { articlesNode }
       }
+    ; set model(newModel)
+      { this.setAttribute("model", newModel)
+      }
+    ; get model()
+      { return this.getAttribute("model")
+      }
     ; attributeChangedCallback(name, oldValue, newValue)
       { const value = newValue || oldValue
       ; const { articlesNode } = this.state
-      ; if (name === "using")
+      ; if (name === "model")
         { Array.from(this.childNodes).map(e => this.removeChild(e))
         ; const cloneNode = articlesNode.cloneNode(true)
-        ; cloneNode.render(eval(value))
-        ; this.appendChild(cloneNode)
+        ; if (value)
+          { cloneNode.render(this.models[value])
+          ; this.appendChild(cloneNode)
+          }
         }
       }
+    ; models =
+        { operatingSystems:
+          { title: "Operating Systems"
+          , articles:
+            [ { author: "Puffy"
+            , title: "Absolute OpenBSD"
+            , locale: {
+                country: "The Deep Sea"
+              }
+              }
+            , { author: "Glenda"
+              , title: "8 1/2"
+              , locale: {
+                  country: "Outer Space"
+                }
+              }
+            , { author: "Beastle"
+              , title: "The FreeBSD Handbook"
+              , locale: {
+                  country: "US"
+                }
+              }
+            ]
+          }
+        , programmingLanguages: 
+            { title: "Programming Languages"
+            , articles:
+              [ { author: "Duke"
+                , title: "The Book of Java"
+                , locale: {
+                    country: "US"
+                  }
+                }
+              , { author: "Ferris"
+                , title: "The Book of Rust"
+                , locale: {
+                    country: "CA"
+                  }
+                }
+              , { author: "Gopher"
+                , title: "The Book of Golang"
+                , locale: {
+                    country: "CH"
+                  }
+                }
+              , { author: "The Lisp allien"
+                , title: "Li.p..li..s.pi...sp.ips.li.pp..."
+                , locale: {
+                    country: "Space"
+                  }
+                }
+              ]
+            }
+          }
+    }
+  );
+document.addEventListener
+  ( "DOMContentLoaded"
+  , function()
+    { const articles = document.getElementById('articles')
+    ; const variableSelectar = document.getElementById('variableSelector')
+    ; if (!articles.models[articles.model])
+      { articles.model = Object.keys(articles.models)[0]
+      }
+    ; for (const [ key, model ] of Object.entries(articles.models))
+      { const option = document.createElement("option")
+      ; option.value = key
+      ; option.textContent = model.title
+      ; option.selected = key === articles.model
+      ; variableSelector.appendChild(option)
+      }
+    ; variableSelector.addEventListener
+        ( "change"
+        , function(evt)
+          { articles.model = evt.srcElement.value
+          }
+        )
     }
   );
 </script>
