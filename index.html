@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Custom elements with slot</title>
+  </head>
+  <body>
+    <h3>Custom elements with slot</h3>
+    <div>
+      <label>
+        select model:
+        <select id="variableSelector">
+          <option value="operatingSystems">Operating Systems</option>
+          <option value="programmingLanguages">Programming Languages</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <fgtrjhyu-articles using="programmingLanguages" id="articles">
+        <fgtrjhyu-articles-articles>
+          <template>
+            <h2><slot name="header.title"></slot> Articles</h2>
+            <div>
+              <slot name="articles"></slot>
+            </div>
+            <h3>End of <slot name="footer.title"></slot> articles</h3>
+          </template>
+          <fgtrjhyu-articles-article slot="articles">
+            <template>
+              <div>
+                <span style="color: red">
+                  <slot name="title"></slot>
+                </span>
+                written by
+                <span style="color: green">
+                  <slot name="author"></slot>
+                </span>
+                shipping from
+                <span style="color: gray">
+                  <slot name="locale.country"></slot>
+                </span>
+              </div>
+            </template>
+            <span slot="author"
+              data-fgtrjhyu-model="author">Default Author</span>
+            <span slot="title"
+              data-fgtrjhyu-model="title">Default Title</span>
+            <span slot="locale.country"
+              data-fgtrjhyu-model="locale.country">Default Country</span>
+          </fgtrjhyu-articles-article>
+          <span slot="header.title"
+            data-fgtrjhyu-model="title">Header Title</span>
+          <span slot="footer.title"
+            data-fgtrjhyu-model="title">Footer Title</span>
+        </fgtrjhyu-articles-articles>
+      </fgtrjhyu-article>
+    </div>
+  </body>
+</html>
+<script>
+const articles = document.getElementById('articles');
+const variableSelector = document.getElementById('variableSelector');
+Array.from(variableSelector.options).reduce
+  ( function(using, option)
+    { option.selected = option.value === using
+    ; return using
+    }
+  , articles.getAttribute("using")
+  )
+variableSelector.addEventListener
+  ( "change"
+  , function(evt)
+    { articles.using = evt.srcElement.value
+    }
+  )
+function propValueOf(value, path)
+{ while (path.length > 0)
+  { [ head, ...path ] = path
+  ; value = value[head]
+  }
+  return value;
+}
+const operatingSystems =
+  { title: "Operating Systems"
+  , articles:
+    [ { author: "Puffy"
+    , title: "Absolute OpenBSD"
+    , locale: {
+        country: "The Deep Sea"
+      }
+      }
+    , { author: "Glenda"
+      , title: "8 1/2"
+      , locale: {
+          country: "Outer Space"
+        }
+      }
+    , { author: "Beastle"
+      , title: "The FreeBSD Handbook"
+      , locale: {
+          country: "US"
+        }
+      }
+    ]
+  }
+const programmingLanguages =
+  { title: "Programming Languages"
+  , articles:
+    [ { author: "Duke"
+      , title: "The Book of Java"
+      , locale: {
+          country: "US"
+        }
+      }
+    , { author: "Ferris"
+      , title: "The Book of Rust"
+      , locale: {
+          country: "CA"
+        }
+      }
+    , { author: "Gopher"
+      , title: "The Book of Golang"
+      , locale: {
+          country: "CH"
+        }
+      }
+    , { author: "The Lisp allien"
+      , title: "Li.p..li..s.pi...sp.ips.li.pp..."
+      , locale: {
+          country: "Space"
+        }
+      }
+    ]
+  }
+customElements.define
+  ( "fgtrjhyu-articles-article"
+  , class extends HTMLElement
+    { constructor()
+      { super()
+      }
+    ; render(model)
+      { const [ template, ...elements ] = Array
+          .from(this.childNodes)
+          .map(e => this.removeChild(e))
+          .filter(e => e.nodeType === 1)
+          .map(e => e.nodeName === "TEMPLATE" ? e.content : e)
+      ; for(const element of elements)
+        { if (element.dataset.fgtrjhyuModel)
+          { const value = propValueOf(model, element.dataset.fgtrjhyuModel.split('.'))
+          ; const values = ((typeof value) === "array") ? value : [ value ]
+          ; for(const e of value)
+            { const cloneNode = element.cloneNode(true)
+            ; if (cloneNode.nodeName === "INPUT")
+              { cloneNode.value = e
+              }
+              else
+              { cloneNode.textContent = e
+              }
+            ; this.appendChild(cloneNode)
+            }
+          }
+        }
+      ; const shadowRoot = this.attachShadow({ mode : "open" })
+      ; shadowRoot.appendChild(template.cloneNode(true))
+      }
+    }
+  )
+customElements.define
+  ( "fgtrjhyu-articles-articles"
+  , class extends HTMLElement
+    { constructor()
+      { super()
+      }
+    ; render(model)
+      { const [ template, articleNode, ...elements ] = Array
+          .from(this.childNodes)
+          .map(e => this.removeChild(e))
+          .filter(e => e.nodeType === 1)
+          .map(e => e.nodeName === "TEMPLATE" ? e.content : e)
+      ; for(const article of model.articles)
+        { const cloneNode = articleNode.cloneNode(true);
+        ; cloneNode.render(article)
+        ; this.appendChild(cloneNode)
+        }
+      ; for(const element of elements)
+        { if (element.dataset.fgtrjhyuModel)
+          { const value = propValueOf(model, element.dataset.fgtrjhyuModel.split('.'))
+          ; const values = (typeof value === "array") ? value : [ value ]
+          ; for(const e of values)
+            { const cloneNode = element.cloneNode(true)
+            ; if (cloneNode.nodeName === "INPUT")
+              { cloneNode.value = e
+              }
+              else
+              { cloneNode.textContent = e
+              }
+            ; this.appendChild(cloneNode)
+            }
+          }
+        }
+      ; const shadowRoot = this.attachShadow({ mode: "open" })
+      ; shadowRoot.appendChild(template.cloneNode(true))
+      }
+    }
+  );
+customElements.define
+  ( "fgtrjhyu-articles"
+  , class extends HTMLElement
+    { static observedAttributes = [ "using" ]
+    ; set using(newUsing)
+      { this.setAttribute("using", newUsing)
+      }
+    ; get using()
+      { return this.getAttribute("using")
+      }
+    ; constructor()
+      { super()
+      ; const [ articlesNode ] = Array
+          .from(this.childNodes)
+          .map(e => this.removeChild(e))
+          .filter(e => e.nodeType === 1)
+          .map(e => e.nodeName === "TEMPLATE" ? e.content : e)
+      ; this.state = { articlesNode }
+      }
+    ; attributeChangedCallback(name, oldValue, newValue)
+      { const value = newValue || oldValue
+      ; const { articlesNode } = this.state
+      ; if (name === "using")
+        { Array.from(this.childNodes).map(e => this.removeChild(e))
+        ; const cloneNode = articlesNode.cloneNode(true)
+        ; cloneNode.render(eval(value))
+        ; this.appendChild(cloneNode)
+        }
+      }
+    }
+  );
+</script>
