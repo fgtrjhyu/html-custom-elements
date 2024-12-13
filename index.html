@@ -2,244 +2,244 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <title>Using custom elements with slot</title>
+  <meta charset="UTF-8">
+  <title>Using custom elements with slot</title>
 </head>
 
 <body>
-    <h4>Using custom elements with slot</h4>
-    <div>
-        <label>
-            select model:
-            <select id="variableSelector"></select>
-        </label>
-    </div>
-    <div>
-        <fgtrjhyu-articles model="programmingLanguages" id="articles">
-            <fgtrjhyu-articles-articles>
-                <template>
-                    <h2>
-                        <slot name="header.title"></slot> Articles
-                    </h2>
-                    <div>
-                        <slot name="articles"></slot>
-                    </div>
-                    <h3>End of <slot name="footer.title"></slot> articles</h3>
-                </template>
-                <fgtrjhyu-articles-article slot="articles">
-                    <template>
-                        <div>
-                            <span style="color: red">
-                                <slot name="title"></slot>
-                            </span>
-                            written by
-                            <span style="color: green">
-                                <slot name="author"></slot>
-                            </span>
-                            shipping from
-                            <span style="color: gray">
-                                <slot name="locale.country"></slot>
-                            </span>
-                        </div>
-                    </template>
-                    <span slot="author" data-fgtrjhyu-model="author">Default Author</span>
-                    <span slot="title" data-fgtrjhyu-model="title">Default Title</span>
-                    <span slot="locale.country" data-fgtrjhyu-model="locale.country">Default Country</span>
-                </fgtrjhyu-articles-article>
-                <span slot="header.title" data-fgtrjhyu-model="title">Header Title</span>
-                <span slot="footer.title" data-fgtrjhyu-model="title">Footer Title</span>
-            </fgtrjhyu-articles-articles>
-        </fgtrjhyu-articles>
-    </div>
+  <h4>Using custom elements with slot</h4>
+  <div>
+    <label>
+      select model:
+      <select id="variableSelector"></select>
+    </label>
+  </div>
+  <div>
+    <fgtrjhyu-articles model="programmingLanguages" id="articles">
+      <fgtrjhyu-articles-articles>
+        <template>
+          <h2>
+            <slot name="header.title"></slot> Articles
+          </h2>
+          <div>
+            <slot name="articles"></slot>
+          </div>
+          <h3>End of <slot name="footer.title"></slot> articles</h3>
+        </template>
+        <fgtrjhyu-articles-article slot="articles">
+          <template>
+            <div>
+              <span style="color: red">
+                <slot name="title"></slot>
+              </span>
+              written by
+              <span style="color: green">
+                <slot name="author"></slot>
+              </span>
+              shipping from
+              <span style="color: gray">
+                <slot name="locale.country"></slot>
+              </span>
+            </div>
+          </template>
+          <span slot="author" data-fgtrjhyu-model="author">Default Author</span>
+          <span slot="title" data-fgtrjhyu-model="title">Default Title</span>
+          <span slot="locale.country" data-fgtrjhyu-model="locale.country">Default Country</span>
+        </fgtrjhyu-articles-article>
+        <span slot="header.title" data-fgtrjhyu-model="title">Header Title</span>
+        <span slot="footer.title" data-fgtrjhyu-model="title">Footer Title</span>
+      </fgtrjhyu-articles-articles>
+    </fgtrjhyu-articles>
+  </div>
 </body>
 <script>
-    customElements.define("fgtrjhyu-articles-article", class extends HTMLElement {
-        constructor() {
-            super()
+  customElements.define("fgtrjhyu-articles-article", class extends HTMLElement {
+    constructor() {
+      super()
+    }
+    render(model) {
+      function propValueOf(obj, path) {
+        while (path.length > 0) {
+          var [head, ...path] = path;
+          obj = obj[head];
         }
-        render(model) {
-            function propValueOf(obj, path) {
-                while (path.length > 0) {
-                    var [head, ...path] = path;
-                    obj = obj[head];
-                }
-                return obj;
+        return obj;
+      }
+      const [template, ...elements] = Array
+        .from(this.childNodes)
+        .map(e => this.removeChild(e))
+        .filter(e => e.nodeType === 1)
+        .map(e => e.nodeName === "TEMPLATE" ? e.content : e);
+      for (const element of elements) {
+        if (element.dataset.fgtrjhyuModel) {
+          const value = propValueOf(model, element.dataset.fgtrjhyuModel.split('.'));
+          const values = ((typeof value) === "array") ? value : [value];
+          for (const e of value) {
+            const cloneNode = element.cloneNode(true);
+            if (cloneNode.nodeName === "INPUT") {
+              cloneNode.value = e;
+            } else {
+              cloneNode.textContent = e;
             }
-            const [template, ...elements] = Array
-                .from(this.childNodes)
-                .map(e => this.removeChild(e))
-                .filter(e => e.nodeType === 1)
-                .map(e => e.nodeName === "TEMPLATE" ? e.content : e);
-            for (const element of elements) {
-                if (element.dataset.fgtrjhyuModel) {
-                    const value = propValueOf(model, element.dataset.fgtrjhyuModel.split('.'));
-                    const values = ((typeof value) === "array") ? value : [value];
-                    for (const e of value) {
-                        const cloneNode = element.cloneNode(true);
-                        if (cloneNode.nodeName === "INPUT") {
-                            cloneNode.value = e;
-                        } else {
-                            cloneNode.textContent = e;
-                        }
-                        this.appendChild(cloneNode);
-                    }
-                }
+            this.appendChild(cloneNode);
+          }
+        }
+      }
+      const shadowRoot = this.attachShadow({
+        mode: "open"
+      });
+      shadowRoot.appendChild(template.cloneNode(true));
+    }
+  });
+  customElements.define("fgtrjhyu-articles-articles", class extends HTMLElement {
+    constructor() {
+      super()
+    }
+    render(model) {
+      function propValueOf(obj, path) {
+        while (path.length > 0) {
+          var [head, ...path] = path;
+          obj = obj[head];
+        }
+        return obj;
+      }
+      const [template, articleNode, ...elements] = Array
+        .from(this.childNodes)
+        .map(e => this.removeChild(e))
+        .filter(e => e.nodeType === 1)
+        .map(e => e.nodeName === "TEMPLATE" ? e.content : e);
+      for (const article of model.articles) {
+        const cloneNode = articleNode.cloneNode(true);
+        cloneNode.render(article);
+        this.appendChild(cloneNode);
+      }
+      for (const element of elements) {
+        if (element.dataset.fgtrjhyuModel) {
+          const value = propValueOf(model, element.dataset.fgtrjhyuModel.split('.'));
+          const values = (typeof value === "array") ? value : [value];
+          for (const e of values) {
+            const cloneNode = element.cloneNode(true);
+            if (cloneNode.nodeName === "INPUT") {
+              cloneNode.value = e;
+            } else {
+              cloneNode.textContent = e;
             }
-            const shadowRoot = this.attachShadow({
-                mode: "open"
-            });
-            shadowRoot.appendChild(template.cloneNode(true));
+            this.appendChild(cloneNode);
+          }
         }
-    });
-    customElements.define("fgtrjhyu-articles-articles", class extends HTMLElement {
-        constructor() {
-            super()
+      }
+      const shadowRoot = this.attachShadow({
+        mode: "open"
+      });
+      shadowRoot.appendChild(template.cloneNode(true));
+    }
+  });
+  customElements.define("fgtrjhyu-articles", class extends HTMLElement {
+    static observedAttributes = ["model"];
+    constructor() {
+      super();
+      const [articlesNode] = Array
+        .from(this.childNodes)
+        .map(e => this.removeChild(e))
+        .filter(e => e.nodeType === 1)
+        .map(e => e.nodeName === "TEMPLATE" ? e.content : e);
+      this.state = {
+        articlesNode
+      };
+    }
+    set model(newModel) {
+      this.setAttribute("model", newModel);
+    }
+    get model() {
+      return this.getAttribute("model");
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+      const {
+        articlesNode
+      } = this.state;
+      const value = newValue || oldValue;
+      if (value) {
+        if (name === "model") {
+          const model = this.models[value];
+          if (model) {
+            Array.from(this.childNodes).map(e => this.removeChild(e));
+            const cloneNode = articlesNode.cloneNode(true);
+            cloneNode.render(model);
+            this.appendChild(cloneNode);
+          }
         }
-        render(model) {
-            function propValueOf(obj, path) {
-                while (path.length > 0) {
-                    var [head, ...path] = path;
-                    obj = obj[head];
-                }
-                return obj;
-            }
-            const [template, articleNode, ...elements] = Array
-                .from(this.childNodes)
-                .map(e => this.removeChild(e))
-                .filter(e => e.nodeType === 1)
-                .map(e => e.nodeName === "TEMPLATE" ? e.content : e);
-            for (const article of model.articles) {
-                const cloneNode = articleNode.cloneNode(true);
-                cloneNode.render(article);
-                this.appendChild(cloneNode);
-            }
-            for (const element of elements) {
-                if (element.dataset.fgtrjhyuModel) {
-                    const value = propValueOf(model, element.dataset.fgtrjhyuModel.split('.'));
-                    const values = (typeof value === "array") ? value : [value];
-                    for (const e of values) {
-                        const cloneNode = element.cloneNode(true);
-                        if (cloneNode.nodeName === "INPUT") {
-                            cloneNode.value = e;
-                        } else {
-                            cloneNode.textContent = e;
-                        }
-                        this.appendChild(cloneNode);
-                    }
-                }
-            }
-            const shadowRoot = this.attachShadow({
-                mode: "open"
-            });
-            shadowRoot.appendChild(template.cloneNode(true));
-        }
-    });
-    customElements.define("fgtrjhyu-articles", class extends HTMLElement {
-        static observedAttributes = ["model"];
-        constructor() {
-            super();
-            const [articlesNode] = Array
-                .from(this.childNodes)
-                .map(e => this.removeChild(e))
-                .filter(e => e.nodeType === 1)
-                .map(e => e.nodeName === "TEMPLATE" ? e.content : e);
-            this.state = {
-                articlesNode
-            };
-        }
-        set model(newModel) {
-            this.setAttribute("model", newModel);
-        }
-        get model() {
-            return this.getAttribute("model");
-        }
-        attributeChangedCallback(name, oldValue, newValue) {
-            const {
-                articlesNode
-            } = this.state;
-            const value = newValue || oldValue;
-            if (value) {
-                if (name === "model") {
-                    const model = this.models[value];
-                    if (model) {
-                        Array.from(this.childNodes).map(e => this.removeChild(e));
-                        const cloneNode = articlesNode.cloneNode(true);
-                        cloneNode.render(model);
-                        this.appendChild(cloneNode);
-                    }
-                }
-            }
-        }
-        models = {
-            operatingSystems: {
-                title: "Operating Systems",
-                articles: [{
-                    author: "Puffy",
-                    title: "Absolute OpenBSD",
-                    locale: {
-                        country: "The Deep Sea"
-                    }
-                }, {
-                    author: "Glenda",
-                    title: "8 1/2",
-                    locale: {
-                        country: "Outer Space"
-                    }
-                }, {
-                    author: "Beastle",
-                    title: "The FreeBSD Handbook",
-                    locale: {
-                        country: "US"
-                    }
-                }]
-            },
-            programmingLanguages: {
-                title: "Programming Languages",
-                articles: [{
-                    author: "Duke",
-                    title: "The Book of Java",
-                    locale: {
-                        country: "US"
-                    }
-                }, {
-                    author: "Ferris",
-                    title: "The Book of Rust",
-                    locale: {
-                        country: "CA"
-                    }
-                }, {
-                    author: "Gopher",
-                    title: "The Book of Golang",
-                    locale: {
-                        country: "CH"
-                    }
-                }, {
-                    author: "The Lisp allien",
-                    title: "Li.p..li..s.pi...sp.ips.li.pp...",
-                    locale: {
-                        country: "Space"
-                    }
-                }]
-            }
-        };
-    });
-    document.addEventListener("DOMContentLoaded", function() {
-        const articles = document.getElementById('articles');
-        const variableSelectar = document.getElementById('variableSelector');
-        if (!articles.models[articles.model]) {
-            articles.model = Object.keys(articles.models)[0];
-        }
-        for (const [key, model] of Object.entries(articles.models)) {
-            const option = document.createElement("option");
-            option.value = key;
-            option.textContent = model.title;
-            option.selected = key === articles.model;
-            variableSelector.appendChild(option);
-        }
-        variableSelector.addEventListener("change", function(evt) {
-            articles.model = evt.srcElement.value;
-        })
+      }
+    }
+    models = {
+      operatingSystems: {
+        title: "Operating Systems",
+        articles: [{
+          author: "Puffy",
+          title: "Absolute OpenBSD",
+          locale: {
+            country: "The Deep Sea"
+          }
+        }, {
+          author: "Glenda",
+          title: "8 1/2",
+          locale: {
+            country: "Outer Space"
+          }
+        }, {
+          author: "Beastle",
+          title: "The FreeBSD Handbook",
+          locale: {
+            country: "US"
+          }
+        }]
+      },
+      programmingLanguages: {
+        title: "Programming Languages",
+        articles: [{
+          author: "Duke",
+          title: "The Book of Java",
+          locale: {
+            country: "US"
+          }
+        }, {
+          author: "Ferris",
+          title: "The Book of Rust",
+          locale: {
+            country: "CA"
+          }
+        }, {
+          author: "Gopher",
+          title: "The Book of Golang",
+          locale: {
+            country: "CH"
+          }
+        }, {
+          author: "The Lisp allien",
+          title: "Li.p..li..s.pi...sp.ips.li.pp...",
+          locale: {
+            country: "Space"
+          }
+        }]
+      }
+    };
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+    const articles = document.getElementById('articles');
+    const variableSelectar = document.getElementById('variableSelector');
+    if (!articles.models[articles.model]) {
+      articles.model = Object.keys(articles.models)[0];
+    }
+    for (const [key, model] of Object.entries(articles.models)) {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = model.title;
+      option.selected = key === articles.model;
+      variableSelector.appendChild(option);
+    }
+    variableSelector.addEventListener("change", function(evt) {
+      articles.model = evt.srcElement.value;
     })
+  })
 </script>
 
 </html>

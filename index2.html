@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>reusing shadowRoot, replacing a template</title>
+</head>
+
+<body>
+  <h3>reusing shadowRoot, replacing a template</h3>
+  <template id="foo">
+    <h1>
+      <slot name="foo"></slot>
+    </h1>
+    <h2>
+      <slot name="bar"></slot>
+    </h2>
+    <h3>
+      <slot name="baz"></slot>
+    </h3>
+  </template>
+  <template id="bar">
+    <h2>
+      <slot name="foo"></slot>
+    </h2>
+    <h1>
+      <slot name="bar"></slot>
+    </h1>
+    <h2>
+      <slot name="baz"></slot>
+    </h2>
+  </template>
+  <template id="baz">
+    <h3>
+      <slot name="foo"></slot>
+    </h3>
+    <h2>
+      <slot name="bar"></slot>
+    </h2>
+    <h1>
+      <slot name="baz"></slot>
+    </h1>
+  </template>
+  <input type="radio" name="template" value="foo">foo</input>
+  <input type="radio" name="template" value="bar" checked>bar</input>
+  <input type="radio" name="template" value="baz">baz</input>
+  <h4>Content</h4>
+  <div>
+    <foo-bar id="foo-bar" template="bar">
+      <div slot="foo">foo</div>
+      <div slot="bar">bar</div>
+      <div slot="baz">baz</div>
+    </foo-bar>
+  </div>
+
+</body>
+
+</html>
+<script>
+  customElements.define("foo-bar", class extends HTMLElement {
+    static observedAttributes = ["template"];
+    constructor() {
+      super()
+      const shadowRoot = this.attachShadow({
+        mode: "open"
+      });
+    }
+    get template() {
+      return this.getAttribute("template");
+    }
+    set template(newTemplate) {
+      this.setAttribute("template", newTemplate);
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+      var value = newValue || oldValue;
+      if (!value) {
+        return;
+      }
+      if (name === "template") {
+        const shadowRoot = this.shadowRoot;
+        Array.from(shadowRoot.childNodes)
+          .map(e => shadowRoot.removeChild(e));
+        const template = document.getElementById(value).content;
+        shadowRoot.appendChild(template.cloneNode(true));
+      }
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const fooBar = document.getElementById("foo-bar");
+    function onChange(evt) {
+      fooBar.template = evt.srcElement.value;
+    }
+    Array.from(
+      document.querySelectorAll("input[type='radio'][name='template']")
+    ).map(function(radio) {
+      radio.addEventListener("change", onChange);
+    });
+  });
+</script>
